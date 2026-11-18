@@ -9,26 +9,35 @@ type Card = {
   isMatched: boolean;
 };
 
-// 6 pairs of Nepali foods = 12 cards (we'll shuffle them in a later lesson)
-const startingCards: Card[] = [
-  { id: 1, emoji: "🥟", isFlipped: false, isMatched: false }, // Momo
-  { id: 2, emoji: "🥟", isFlipped: false, isMatched: false },
-  { id: 3, emoji: "🍛", isFlipped: false, isMatched: false }, // Dal Bhat
-  { id: 4, emoji: "🍛", isFlipped: false, isMatched: false },
-  { id: 5, emoji: "🍜", isFlipped: false, isMatched: false }, // Thukpa
-  { id: 6, emoji: "🍜", isFlipped: false, isMatched: false },
-  { id: 7, emoji: "🍵", isFlipped: false, isMatched: false }, // Chiya
-  { id: 8, emoji: "🍵", isFlipped: false, isMatched: false },
-  { id: 9, emoji: "🍩", isFlipped: false, isMatched: false }, // Sel Roti
-  { id: 10, emoji: "🍩", isFlipped: false, isMatched: false },
-  { id: 11, emoji: "🥛", isFlipped: false, isMatched: false }, // Dahi
-  { id: 12, emoji: "🥛", isFlipped: false, isMatched: false },
-];
+// The 6 Nepali foods: each one becomes a pair
+const foods = ["🥟", "🍛", "🍜", "🍵", "🍩", "🥛"]; // Momo, Dal Bhat, Thukpa, Chiya, Sel Roti, Dahi
+
+// Shuffle a list randomly (Fisher-Yates shuffle)
+function shuffle<T>(items: T[]): T[] {
+  const copy = [...items]; // work on a copy, never the original
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); // random position from 0 to i
+    [copy[i], copy[j]] = [copy[j], copy[i]]; // swap the two items
+  }
+  return copy;
+}
+
+// Build a fresh, shuffled deck of 12 cards
+function createDeck(): Card[] {
+  const pairs = [...foods, ...foods]; // every food twice = 12 emojis
+  return shuffle(pairs).map((emoji, index) => ({
+    id: index + 1,
+    emoji: emoji,
+    isFlipped: false,
+    isMatched: false,
+  }));
+}
 
 export default function HomeScreen() {
-  const [cards, setCards] = useState<Card[]>(startingCards);
+  const [cards, setCards] = useState<Card[]>(createDeck);
   const [selected, setSelected] = useState<number[]>([]); // ids flipped this turn
   const [isChecking, setIsChecking] = useState(false); // true during the wait
+  const [moves, setMoves] = useState(0); // 1 move = 2 cards flipped
 
   // True only when every card is matched
   const hasWon = cards.every((card) => card.isMatched);
@@ -61,7 +70,9 @@ export default function HomeScreen() {
       return;
     }
 
-    // 5. Two cards are flipped: compare them
+    // 5. Two cards are flipped: that's one move
+    setMoves((currentMoves) => currentMoves + 1);
+
     const [firstId, secondId] = newSelected;
     const firstCard = newCards.find((card) => card.id === firstId);
     const secondCard = newCards.find((card) => card.id === secondId);
@@ -93,10 +104,20 @@ export default function HomeScreen() {
     }
   }
 
+  // Start a brand-new game
+  function restartGame() {
+    setCards(createDeck());
+    setSelected([]);
+    setIsChecking(false);
+    setMoves(0);
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Nepali Memory Match</Text>
       <Text style={styles.subtitle}>Find the matching Nepali foods! 🇳🇵</Text>
+
+      <Text style={styles.movesText}>Moves: {moves}</Text>
 
       <View style={styles.grid}>
         {cards.map((card) => (
@@ -118,8 +139,21 @@ export default function HomeScreen() {
 
       {/* Win message: only shows when all cards are matched */}
       {hasWon && (
-        <Text style={styles.winText}>🎉Congrats! You found all the pairs!</Text>
+        <Text style={styles.winText}>
+          🎉 Congratulations! You won in {moves} moves!
+        </Text>
       )}
+
+      {/* Restart button: disabled during the wait, so the timer can't mess up a new game */}
+      <Pressable
+        style={[styles.button, isChecking && styles.buttonDisabled]}
+        onPress={restartGame}
+        disabled={isChecking}
+      >
+        <Text style={styles.buttonText}>
+          {hasWon ? "🔄 Play Again" : "🔄 Restart"}
+        </Text>
+      </Pressable>
     </View>
   );
 }
@@ -141,7 +175,13 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: "#555555",
-    marginBottom: 30,
+    marginBottom: 16,
+  },
+  movesText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#003893",
+    marginBottom: 16,
   },
   grid: {
     flexDirection: "row",
@@ -176,5 +216,20 @@ const styles = StyleSheet.create({
     color: "#2E7D32",
     marginTop: 24,
     textAlign: "center",
+  },
+  button: {
+    marginTop: 24,
+    backgroundColor: "#DC143C",
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
