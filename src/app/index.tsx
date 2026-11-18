@@ -1,19 +1,28 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function HomeScreen() {
+  // Memory: is the momo card flipped? Starts as false (face-down)
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [isYakFlipped, setIsYakFlipped] = useState(false);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Nepali Memory Match</Text>
       <Text style={styles.subtitle}>Find all the matching pairs!</Text>
 
-      {/* The "bench": holds both cards side by side */}
       <View style={styles.row}>
-        <View style={styles.card}>
-          <Text style={styles.cardEmoji}>🥟</Text>
-        </View>
-        <View style={styles.card}>
-          <Text style={styles.cardEmoji}>🐃</Text>
-        </View>
+    
+        <Pressable style={styles.card} onPress={() => setIsFlipped(!isFlipped)}>
+          <Text style={styles.cardEmoji}>{isFlipped ? "🥟" : "❓"}</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.card}
+          onPress={() => setIsYakFlipped(!isYakFlipped)}
+        >
+          <Text style={styles.cardEmoji}>{isYakFlipped ? "🐃" : "❓"}</Text>
+        </Pressable>
       </View>
     </View>
   );
