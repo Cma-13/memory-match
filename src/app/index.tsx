@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // What one card looks like
 type Card = {
@@ -113,55 +114,62 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Nepali Memory Match</Text>
-      <Text style={styles.subtitle}>Find the matching Nepali foods! 🇳🇵</Text>
+    // SafeAreaView keeps everything away from the status bar and navigation bar
+    <SafeAreaView style={styles.safeArea}>
+      {/* ScrollView lets small phones scroll if the content is too tall */}
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Nepali Memory Match</Text>
+        <Text style={styles.subtitle}>Find the matching Nepali foods! 🇳🇵</Text>
 
-      <Text style={styles.movesText}>Moves: {moves}</Text>
+        <Text style={styles.movesText}>Moves: {moves}</Text>
 
-      <View style={styles.grid}>
-        {cards.map((card) => (
-          <Pressable
-            key={card.id}
-            style={[
-              styles.card,
-              card.isFlipped && styles.cardFlipped,
-              card.isMatched && styles.cardMatched,
-            ]}
-            onPress={() => handlePress(card.id)}
-          >
-            <Text style={styles.cardEmoji}>
-              {card.isFlipped ? card.emoji : "❓"}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+        <View style={styles.grid}>
+          {cards.map((card) => (
+            <Pressable
+              key={card.id}
+              style={[
+                styles.card,
+                card.isFlipped && styles.cardFlipped,
+                card.isMatched && styles.cardMatched,
+              ]}
+              onPress={() => handlePress(card.id)}
+            >
+              <Text style={styles.cardEmoji}>
+                {card.isFlipped ? card.emoji : "❓"}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
 
-      {/* Win message: only shows when all cards are matched */}
-      {hasWon && (
-        <Text style={styles.winText}>
-          🎉 Congratulations! You won in {moves} moves!
-        </Text>
-      )}
+        {/* Win message: only shows when all cards are matched */}
+        {hasWon && (
+          <Text style={styles.winText}>
+            🎉 Congratulations! You won in {moves} moves!
+          </Text>
+        )}
 
-      {/* Restart button: disabled during the wait, so the timer can't mess up a new game */}
-      <Pressable
-        style={[styles.button, isChecking && styles.buttonDisabled]}
-        onPress={restartGame}
-        disabled={isChecking}
-      >
-        <Text style={styles.buttonText}>
-          {hasWon ? "🔄 Play Again" : "🔄 Restart"}
-        </Text>
-      </Pressable>
-    </View>
+        {/* Restart button: disabled during the wait, so the timer can't mess up a new game */}
+        <Pressable
+          style={[styles.button, isChecking && styles.buttonDisabled]}
+          onPress={restartGame}
+          disabled={isChecking}
+        >
+          <Text style={styles.buttonText}>
+            {hasWon ? "🔄 Play Again" : "🔄 Restart"}
+          </Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: "#FFF8F0",
+  },
+  container: {
+    flexGrow: 1,
     alignItems: "center",
     justifyContent: "center",
     padding: 20,
