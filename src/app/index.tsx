@@ -1,40 +1,96 @@
 import { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
-// What one card looks like (TypeScript "type")
+// What one card looks like
 type Card = {
   id: number;
   emoji: string;
   isFlipped: boolean;
+  isMatched: boolean;
 };
 
 // 6 pairs of Nepali foods = 12 cards (we'll shuffle them in a later lesson)
 const startingCards: Card[] = [
-  { id: 1, emoji: "🥟", isFlipped: false }, 
-  { id: 2, emoji: "🥟", isFlipped: false },
-  { id: 3, emoji: "🍛", isFlipped: false },
-  { id: 4, emoji: "🍛", isFlipped: false },
-  { id: 5, emoji: "🍜", isFlipped: false },
-  { id: 6, emoji: "🍜", isFlipped: false },
-  { id: 7, emoji: "🍵", isFlipped: false },
-  { id: 8, emoji: "🍵", isFlipped: false },
-  { id: 9, emoji: "🍩", isFlipped: false }, 
-  { id: 10, emoji: "🍩", isFlipped: false },
-  { id: 11, emoji: "🥛", isFlipped: false }, 
-  { id: 12, emoji: "🥛", isFlipped: false },
+  { id: 1, emoji: "🥟", isFlipped: false, isMatched: false }, // Momo
+  { id: 2, emoji: "🥟", isFlipped: false, isMatched: false },
+  { id: 3, emoji: "🍛", isFlipped: false, isMatched: false }, // Dal Bhat
+  { id: 4, emoji: "🍛", isFlipped: false, isMatched: false },
+  { id: 5, emoji: "🍜", isFlipped: false, isMatched: false }, // Thukpa
+  { id: 6, emoji: "🍜", isFlipped: false, isMatched: false },
+  { id: 7, emoji: "🍵", isFlipped: false, isMatched: false }, // Chiya
+  { id: 8, emoji: "🍵", isFlipped: false, isMatched: false },
+  { id: 9, emoji: "🍩", isFlipped: false, isMatched: false }, // Sel Roti
+  { id: 10, emoji: "🍩", isFlipped: false, isMatched: false },
+  { id: 11, emoji: "🥛", isFlipped: false, isMatched: false }, // Dahi
+  { id: 12, emoji: "🥛", isFlipped: false, isMatched: false },
 ];
 
 export default function HomeScreen() {
-  // ONE memory for ALL cards
   const [cards, setCards] = useState<Card[]>(startingCards);
+  const [selected, setSelected] = useState<number[]>([]); // ids flipped this turn
+  const [isChecking, setIsChecking] = useState(false); // true during the wait
 
-  // Flip only the card that was tapped (found by its unique id)
-  function flipCard(id: number) {
-    setCards(
-      cards.map((card) =>
-        card.id === id ? { ...card, isFlipped: !card.isFlipped } : card,
-      ),
+  // True only when every card is matched
+  const hasWon = cards.every((card) => card.isMatched);
+
+  function handlePress(id: number) {
+    const tappedCard = cards.find((card) => card.id === id);
+
+    // 1. Ignore the tap if: we're waiting, the card is already face-up, or already matched
+    if (
+      !tappedCard ||
+      isChecking ||
+      tappedCard.isFlipped ||
+      tappedCard.isMatched
+    ) {
+      return;
+    }
+
+    // 2. Flip the tapped card face-up
+    const newCards = cards.map((card) =>
+      card.id === id ? { ...card, isFlipped: true } : card,
     );
+    setCards(newCards);
+
+    // 3. Remember it as one of this turn's cards
+    const newSelected = [...selected, id];
+    setSelected(newSelected);
+
+    // 4. Only 1 card flipped so far? Wait for the second one.
+    if (newSelected.length < 2) {
+      return;
+    }
+
+    // 5. Two cards are flipped: compare them
+    const [firstId, secondId] = newSelected;
+    const firstCard = newCards.find((card) => card.id === firstId);
+    const secondCard = newCards.find((card) => card.id === secondId);
+
+    if (firstCard?.emoji === secondCard?.emoji) {
+      // ✅ MATCH: mark both as matched, they stay face-up
+      setCards(
+        newCards.map((card) =>
+          card.id === firstId || card.id === secondId
+            ? { ...card, isMatched: true }
+            : card,
+        ),
+      );
+      setSelected([]);
+    } else {
+      // ❌ NO MATCH: wait, then flip both back
+      setIsChecking(true);
+      setTimeout(() => {
+        setCards((currentCards) =>
+          currentCards.map((card) =>
+            card.id === firstId || card.id === secondId
+              ? { ...card, isFlipped: false }
+              : card,
+          ),
+        );
+        setSelected([]);
+        setIsChecking(false);
+      }, 400);
+    }
   }
 
   return (
@@ -46,8 +102,12 @@ export default function HomeScreen() {
         {cards.map((card) => (
           <Pressable
             key={card.id}
-            style={[styles.card, card.isFlipped && styles.cardFlipped]}
-            onPress={() => flipCard(card.id)}
+            style={[
+              styles.card,
+              card.isFlipped && styles.cardFlipped,
+              card.isMatched && styles.cardMatched,
+            ]}
+            onPress={() => handlePress(card.id)}
           >
             <Text style={styles.cardEmoji}>
               {card.isFlipped ? card.emoji : "❓"}
@@ -55,6 +115,11 @@ export default function HomeScreen() {
           </Pressable>
         ))}
       </View>
+
+      {/* Win message: only shows when all cards are matched */}
+      {hasWon && (
+        <Text style={styles.winText}>🎉Congrats! You found all the pairs!</Text>
+      )}
     </View>
   );
 }
@@ -98,7 +163,18 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#003893",
   },
+  cardMatched: {
+    backgroundColor: "#E8F5E9",
+    borderColor: "#2E7D32",
+  },
   cardEmoji: {
     fontSize: 40,
+  },
+  winText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#2E7D32",
+    marginTop: 24,
+    textAlign: "center",
   },
 });
