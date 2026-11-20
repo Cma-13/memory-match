@@ -91,8 +91,8 @@ export default function GameScreen() {
     <SafeAreaView style={styles.safeArea}>
       {/* ScrollView lets small phones scroll if the content is too tall */}
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Nepali Memory Match</Text>
-        <Text style={styles.subtitle}>Find the matching Nepali foods! 🇳🇵</Text>
+        <Text style={styles.title}>Memory Match</Text>
+        <Text style={styles.subtitle}>Find all the matching pairs!</Text>
 
         <Text style={styles.movesText}>Moves: {moves}</Text>
 
