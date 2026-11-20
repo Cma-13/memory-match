@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import GameButton from "../components/GameButton";
 import MemoryCard from "../components/MemoryCard";
 import { createDeck, type Card } from "../data/cards";
 
@@ -112,15 +113,11 @@ export default function HomeScreen() {
         )}
 
         {/* Restart button: disabled during the wait, so the timer can't mess up a new game */}
-        <Pressable
-          style={[styles.button, isChecking && styles.buttonDisabled]}
+        <GameButton
+          label={hasWon ? "🔄 Play Again" : "🔄 Restart"}
           onPress={restartGame}
           disabled={isChecking}
-        >
-          <Text style={styles.buttonText}>
-            {hasWon ? "🔄 Play Again" : "🔄 Restart"}
-          </Text>
-        </Pressable>
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -167,20 +164,5 @@ const styles = StyleSheet.create({
     color: "#2E7D32",
     marginTop: 24,
     textAlign: "center",
-  },
-  button: {
-    marginTop: 24,
-    backgroundColor: "#DC143C",
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 24,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: "bold",
   },
 });
