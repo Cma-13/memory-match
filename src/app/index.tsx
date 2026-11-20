@@ -2,37 +2,8 @@ import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// What one card looks like
-type Card = {
-  id: number;
-  emoji: string;
-  isFlipped: boolean;
-  isMatched: boolean;
-};
-
-// The 6 Nepali foods: each one becomes a pair
-const foods = ["🥟", "🍛", "🍜", "🍵", "🍩", "🥛"]; // Momo, Dal Bhat, Thukpa, Chiya, Sel Roti, Dahi
-
-// Shuffle a list randomly (Fisher-Yates shuffle)
-function shuffle<T>(items: T[]): T[] {
-  const copy = [...items]; // work on a copy, never the original
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1)); // random position from 0 to i
-    [copy[i], copy[j]] = [copy[j], copy[i]]; // swap the two items
-  }
-  return copy;
-}
-
-// Build a fresh, shuffled deck of 12 cards
-function createDeck(): Card[] {
-  const pairs = [...foods, ...foods]; // every food twice = 12 emojis
-  return shuffle(pairs).map((emoji, index) => ({
-    id: index + 1,
-    emoji: emoji,
-    isFlipped: false,
-    isMatched: false,
-  }));
-}
+import MemoryCard from "../components/MemoryCard";
+import { createDeck, type Card } from "../data/cards";
 
 export default function HomeScreen() {
   const [cards, setCards] = useState<Card[]>(createDeck);
@@ -125,19 +96,11 @@ export default function HomeScreen() {
 
         <View style={styles.grid}>
           {cards.map((card) => (
-            <Pressable
+            <MemoryCard
               key={card.id}
-              style={[
-                styles.card,
-                card.isFlipped && styles.cardFlipped,
-                card.isMatched && styles.cardMatched,
-              ]}
+              card={card}
               onPress={() => handlePress(card.id)}
-            >
-              <Text style={styles.cardEmoji}>
-                {card.isFlipped ? card.emoji : "❓"}
-              </Text>
-            </Pressable>
+            />
           ))}
         </View>
 
@@ -197,26 +160,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 12,
     width: 294, // 3 cards (90 each) + 2 gaps (12 each)
-  },
-  card: {
-    width: 90,
-    height: 110,
-    backgroundColor: "#003893",
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardFlipped: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#003893",
-  },
-  cardMatched: {
-    backgroundColor: "#E8F5E9",
-    borderColor: "#2E7D32",
-  },
-  cardEmoji: {
-    fontSize: 40,
   },
   winText: {
     fontSize: 20,
