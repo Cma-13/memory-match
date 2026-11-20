@@ -18,7 +18,7 @@ export default function HomeScreen() {
           <Text style={styles.howToTitle}>How to play</Text>
           <Text style={styles.howToText}>1. Tap a card to flip it.</Text>
           <Text style={styles.howToText}>2. Flip two cards each turn.</Text>
-          <Text style={styles.howToText}>3. Matching foods stay open.</Text>
+          <Text style={styles.howToText}>3. Matching cards stay open.</Text>
           <Text style={styles.howToText}>
             4. Find all pairs in the fewest moves!
           </Text>
@@ -58,10 +58,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#555555",
     marginTop: 8,
+    marginBottom: 20,
     textAlign: "center",
-    marginVertical: 20,
   },
-
   howToBox: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
