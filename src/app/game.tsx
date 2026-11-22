@@ -6,6 +6,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import GameButton from "../components/GameButton";
 import MemoryCard from "../components/MemoryCard";
 import { createDeck, type Card } from "../data/cards";
+import {
+  isBetterScore,
+  loadBestScore,
+  saveBestScore,
+  type Score,
+} from "../utils/bestScore";
 import { formatTime } from "../utils/formatTime";
 
 export default function GameScreen() {
@@ -15,12 +21,19 @@ export default function GameScreen() {
   const [moves, setMoves] = useState(0); // 1 move = 2 cards flipped
   const [seconds, setSeconds] = useState(0); // time played
   const [hasStarted, setHasStarted] = useState(false); // true after the first card is flipped
+  const [bestScore, setBestScore] = useState<Score | null>(null); // saved best score
+  const [isNewBest, setIsNewBest] = useState(false); // true if this game beat the best score
 
   // True only when every card is matched
   const hasWon = cards.every((card) => card.isMatched);
 
   // The timer runs only after the first flip, and stops when you win
   const isTimerRunning = hasStarted && !hasWon;
+
+  // 📂 Load the saved best score once, when the screen opens
+  useEffect(() => {
+    loadBestScore().then((savedScore) => setBestScore(savedScore));
+  }, []);
 
   // ⏱️ Timer: add 1 second every second while the timer is running
   useEffect(() => {
@@ -35,6 +48,21 @@ export default function GameScreen() {
     // Cleanup: stop the ticking when the timer stops or the screen closes
     return () => clearInterval(intervalId);
   }, [isTimerRunning]);
+
+  // 🏆 When you win: check if it's a new best score, and save it if so
+  useEffect(() => {
+    if (!hasWon) {
+      return; // not won yet: nothing to check
+    }
+
+    const newScore: Score = { moves: moves, seconds: seconds };
+
+    if (isBetterScore(newScore, bestScore)) {
+      setBestScore(newScore);
+      setIsNewBest(true);
+      saveBestScore(newScore);
+    }
+  }, [hasWon, moves, seconds, bestScore]);
 
   function handlePress(id: number) {
     const tappedCard = cards.find((card) => card.id === id);
@@ -111,6 +139,7 @@ export default function GameScreen() {
     setMoves(0);
     setSeconds(0);
     setHasStarted(false);
+    setIsNewBest(false);
   }
 
   return (
@@ -126,6 +155,14 @@ export default function GameScreen() {
           <Text style={styles.statText}>Moves: {moves}</Text>
           <Text style={styles.statText}>⏱️ {formatTime(seconds)}</Text>
         </View>
+
+        {/* Best score saved on the phone */}
+        <Text style={styles.bestText}>
+          🏆 Best:{" "}
+          {bestScore
+            ? `${bestScore.moves} moves · ${formatTime(bestScore.seconds)}`
+            : "none yet"}
+        </Text>
 
         <View style={styles.grid}>
           {cards.map((card) => (
@@ -143,6 +180,11 @@ export default function GameScreen() {
             🎉 Congratulations! You won in {moves} moves and{" "}
             {formatTime(seconds)}!
           </Text>
+        )}
+
+        {/* Extra line when this game beat the best score */}
+        {hasWon && isNewBest && (
+          <Text style={styles.newBestText}>🏆 New best score!</Text>
         )}
 
         {/* Restart button: disabled during the wait, so the timer can't mess up a new game */}
@@ -189,12 +231,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: 294, // same width as the grid, so it lines up
-    marginBottom: 16,
+    marginBottom: 8,
   },
   statText: {
     fontSize: 18,
     fontWeight: "600",
     color: "#003893",
+  },
+  bestText: {
+    fontSize: 15,
+    color: "#8A6D00",
+    fontWeight: "600",
+    marginBottom: 16,
   },
   grid: {
     flexDirection: "row",
@@ -209,5 +257,11 @@ const styles = StyleSheet.create({
     color: "#2E7D32",
     marginTop: 24,
     textAlign: "center",
+  },
+  newBestText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#8A6D00",
+    marginTop: 8,
   },
 });
