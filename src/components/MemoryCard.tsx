@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Pressable, StyleSheet, View } from "react-native";
 import type { Card } from "../data/cards";
 
 // What this component needs to be given (its "props")
@@ -13,12 +14,27 @@ export default function MemoryCard({ card, onPress }: MemoryCardProps) {
     <Pressable
       style={[
         styles.card,
-        card.isFlipped && styles.cardFlipped,
+        card.isFlipped && {
+          backgroundColor: card.color,
+          borderColor: "#FFFFFF",
+        },
         card.isMatched && styles.cardMatched,
       ]}
       onPress={onPress}
     >
-      <Text style={styles.cardEmoji}>{card.isFlipped ? card.emoji : "❓"}</Text>
+      {card.isFlipped ? (
+        // Front: a big white icon on the card's own colour
+        <MaterialCommunityIcons name={card.icon} size={52} color="#FFFFFF" />
+      ) : (
+        // Back: a gold star inside an inner border, like a real playing card
+        <View style={styles.cardBackInner}>
+          <MaterialCommunityIcons
+            name="star-four-points"
+            size={34}
+            color="#F5C542"
+          />
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -27,21 +43,25 @@ const styles = StyleSheet.create({
   card: {
     width: 90,
     height: 110,
-    backgroundColor: "#003893",
-    borderRadius: 12,
+    backgroundColor: "#1E2A78", // navy back
+    borderRadius: 14,
+    borderWidth: 3,
+    borderColor: "#F5C542", // gold border
     alignItems: "center",
     justifyContent: "center",
-  },
-  cardFlipped: {
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#003893",
+    padding: 6,
   },
   cardMatched: {
-    backgroundColor: "#E8F5E9",
-    borderColor: "#2E7D32",
+    borderColor: "#00E676", // bright green border
+    opacity: 0.6, // faded, so you can see which pairs are done
   },
-  cardEmoji: {
-    fontSize: 40,
+  cardBackInner: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 9,
+    borderWidth: 1,
+    borderColor: "#F5C542",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
