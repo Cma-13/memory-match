@@ -104,7 +104,7 @@ export default function GameScreen() {
     const firstCard = newCards.find((card) => card.id === firstId);
     const secondCard = newCards.find((card) => card.id === secondId);
 
-    if (firstCard?.emoji === secondCard?.emoji) {
+    if (firstCard?.icon === secondCard?.icon) {
       // ✅ MATCH: mark both as matched, they stay face-up
       setCards(
         newCards.map((card) =>
