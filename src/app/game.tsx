@@ -1,20 +1,40 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import GameButton from "../components/GameButton";
 import MemoryCard from "../components/MemoryCard";
 import { createDeck, type Card } from "../data/cards";
+import { formatTime } from "../utils/formatTime";
 
 export default function GameScreen() {
   const [cards, setCards] = useState<Card[]>(createDeck);
   const [selected, setSelected] = useState<number[]>([]); // ids flipped this turn
   const [isChecking, setIsChecking] = useState(false); // true during the wait
   const [moves, setMoves] = useState(0); // 1 move = 2 cards flipped
+  const [seconds, setSeconds] = useState(0); // time played
+  const [hasStarted, setHasStarted] = useState(false); // true after the first card is flipped
 
   // True only when every card is matched
   const hasWon = cards.every((card) => card.isMatched);
+
+  // The timer runs only after the first flip, and stops when you win
+  const isTimerRunning = hasStarted && !hasWon;
+
+  // ⏱️ Timer: add 1 second every second while the timer is running
+  useEffect(() => {
+    if (!isTimerRunning) {
+      return; // timer not running: do nothing
+    }
+
+    const intervalId = setInterval(() => {
+      setSeconds((currentSeconds) => currentSeconds + 1);
+    }, 1000);
+
+    // Cleanup: stop the ticking when the timer stops or the screen closes
+    return () => clearInterval(intervalId);
+  }, [isTimerRunning]);
 
   function handlePress(id: number) {
     const tappedCard = cards.find((card) => card.id === id);
@@ -27,6 +47,11 @@ export default function GameScreen() {
       tappedCard.isMatched
     ) {
       return;
+    }
+
+    // Start the timer on the very first flip
+    if (!hasStarted) {
+      setHasStarted(true);
     }
 
     // 2. Flip the tapped card face-up
@@ -84,6 +109,8 @@ export default function GameScreen() {
     setSelected([]);
     setIsChecking(false);
     setMoves(0);
+    setSeconds(0);
+    setHasStarted(false);
   }
 
   return (
@@ -94,7 +121,11 @@ export default function GameScreen() {
         <Text style={styles.title}>Memory Match</Text>
         <Text style={styles.subtitle}>Find all the matching pairs!</Text>
 
-        <Text style={styles.movesText}>Moves: {moves}</Text>
+        {/* Stats: moves and time side by side */}
+        <View style={styles.statsRow}>
+          <Text style={styles.statText}>Moves: {moves}</Text>
+          <Text style={styles.statText}>⏱️ {formatTime(seconds)}</Text>
+        </View>
 
         <View style={styles.grid}>
           {cards.map((card) => (
@@ -109,7 +140,8 @@ export default function GameScreen() {
         {/* Win message: only shows when all cards are matched */}
         {hasWon && (
           <Text style={styles.winText}>
-            🎉 Congratulations! You won in {moves} moves!
+            🎉 Congratulations! You won in {moves} moves and{" "}
+            {formatTime(seconds)}!
           </Text>
         )}
 
@@ -153,11 +185,16 @@ const styles = StyleSheet.create({
     color: "#555555",
     marginBottom: 16,
   },
-  movesText: {
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: 294, // same width as the grid, so it lines up
+    marginBottom: 16,
+  },
+  statText: {
     fontSize: 18,
     fontWeight: "600",
     color: "#003893",
-    marginBottom: 16,
   },
   grid: {
     flexDirection: "row",
